@@ -27,7 +27,7 @@ public:
         pch = strtok (dup," ,.-");
         while (pch != NULL)
         {
-            printf ("%s\n",pch);
+            cout<<pch<<endl;
             pch = strtok(NULL, " ,.-");
         }
         free(dup);
