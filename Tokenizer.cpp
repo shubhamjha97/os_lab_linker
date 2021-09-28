@@ -5,6 +5,7 @@
 #include "Tokenizer.h"
 #include <iostream>
 #include<string>
+#include <string.h>
 using namespace std;
 
 // TODO: Read lines from stdin
