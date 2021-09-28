@@ -3,6 +3,8 @@
 //
 
 #include "Tokenizer.h"
+#include <iostream>
+using namespace std;
 
 // TODO: Read lines from stdin
 // TODO: Read file line by line, keep track of current line, print current line
@@ -12,9 +14,31 @@ class Tokenizer {
     // TODO: create a main class
     // TODO: Write Makefile
     // TODO: Add sample input
+    string currentLine;
 
 public:
-    void getToken() {
+    char *pch;
 
+    string getToken() {
+        std::getline(std::cin, currentLine);
+
+        char *dup = strdup(currentLine.c_str());
+        pch = strtok (dup," ,.-");
+        while (pch != NULL)
+        {
+            printf ("%s\n",pch);
+            pch = strtok(NULL, " ,.-");
+        }
+        free(dup);
+        return "Done";
     }
 };
+
+int main() {
+    Tokenizer tokenizer = Tokenizer();
+    for(int i=0; i<10; i++) {
+        cout<<tokenizer.getToken()<<endl;
+    }
+    cout<<"DONE"<<endl;
+    return 0;
+}
