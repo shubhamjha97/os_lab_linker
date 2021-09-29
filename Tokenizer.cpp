@@ -85,7 +85,7 @@ public:
             }
         }
         tokenBuffer.append(tokens[currentTokenIdx]);
-        cout<<"Token: "<<tokenBuffer<<endl;
+//        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
         currentTokenIdx++;
         return true;
     }

@@ -13,6 +13,7 @@ class Parser {
     map<string, int> symbolTable;
     int moduleBaseAddress;
     int globalAddress;
+    vector<int> memoryMap;
 
 public:
     Parser(ifstream & inFile) : tokenizer(inFile) {
@@ -20,8 +21,10 @@ public:
         globalAddress = 0;
     }
 
-    void thwowParseError() {
-        // TODO: implement method which uses the current context to throw an exception
+    void clearState() {
+        moduleBaseAddress = 0;
+        globalAddress = 0;
+        tokenizer.clearState();
     }
 
     void warn() {
@@ -90,7 +93,7 @@ public:
             return false;
         }
 
-        if(codeCount + globalAddress - 1 >= MEMORY_SIZE) {
+        if(pass1 && (codeCount + globalAddress - 1 >= MEMORY_SIZE)) {
             tokenizer.parseErrorAndExit(6);
         }
 
@@ -102,27 +105,30 @@ public:
                 return false;
             }
 
-            int operand = tokenizer.getOperand(instr), addr = operand;
+            int operand = tokenizer.getOperand(instr);
+            int opcode = tokenizer.getOpcode(instr);
 
-            switch (opType) {
-                case 'R':
-                    // TODO: Calculate moduleBaseAddress
-                    addr = operand + moduleBaseAddress;
-                    break;
-                case 'E':
-                    // TODO: Get relative address of symbols defined in the useList
-                    // TODO: Symbols can even be defined later. Figure out how to do this.
-                    break;
-                case 'I':
-                    addr = operand;
-                    break;
-                case 'A':
-                    addr = operand;
-                    // TODO: Throw error when operand >= 512 (machine size)
-                    break;
-                // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
+            if(!pass1) {
+                int addr = operand;
+                switch (opType) {
+                    case 'R':
+                        addr = operand + moduleBaseAddress;
+                        break;
+                    case 'E':
+                        // TODO: Check if any validation is required here
+                        addr = symbolTable[useList[operand]];
+                        break;
+                    case 'I':
+                        addr = operand;
+                        break;
+                    case 'A':
+                        addr = operand;
+                        // TODO: Throw error when operand >= 512 (machine size)
+                        break;
+                        // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
+                }
+                memoryMap.push_back(opcode*1000 + addr);
             }
-            // TODO: Add pass-specific logic
 
             globalAddress++;
         }
@@ -130,14 +136,8 @@ public:
         return true;
     }
 
-    bool processProgramText() {
-        // TODO: Logic for pass2.
-        return false;
-    }
-
     bool readModule(bool pass1=true) {
         moduleBaseAddress = globalAddress;
-        // TODO: Debug
         if(!readDefinitionList(pass1)) {
             return false;
         }
@@ -159,7 +159,12 @@ public:
     void printMemoryMap() {
         // TODO: implement
         // TODO: Print the memory map and the warnings/errors
-        return;
+        int n = memoryMap.size();
+        cout<<"Memory Map"<<endl;
+        for(int i=0; i<n; i++) {
+            cout<<std::setfill('0') << std::setw(3)<<i<<": ";
+            cout<<std::setfill('0') << std::setw(4)<<memoryMap[i]<<endl;
+        }
     }
 
     void runPass1() {
@@ -171,7 +176,7 @@ public:
     void runPass2() {
         cout<<"starting pass 2"<<endl;
         tokenizer.seekToBeginning();
-        tokenizer.clearState();
+        clearState();
         while(readModule(false));
         printMemoryMap();
         cout<<"pass 2 done"<<endl;
