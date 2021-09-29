@@ -16,6 +16,7 @@ class Parser {
     map<string, bool> usedSymbols;
     map<string, bool> globalUsedSymbols;
     map<string, int> symbolDefinitionLocation;
+    map<int, int> baseAddresses;
 
     set<string> multipleDefinitionSymbols; // TODO: remove
     vector<vector<string> > moduleUseLists;
@@ -151,12 +152,12 @@ public:
                         symbol = moduleUseLists[currentModuleCount][operand];
                         if(symbolTable.find(symbol) != symbolTable.end()) {
                             addr = symbolTable[symbol];
-                            usedSymbols[symbol] = true;
-                            globalUsedSymbols[symbol] = true;
                         } else {
                             error = "Error: " + symbol + " is not defined; zero used";
                             addr = 0;
                         }
+                        usedSymbols[symbol] = true;
+                        globalUsedSymbols[symbol] = true;
                         break;
                     case 'I': // Immediate
                         addr = operand;
@@ -195,7 +196,9 @@ public:
 
     bool readModule(bool pass1=true) {
         moduleBaseAddress = globalAddress;
-        warnings.clear();
+        if(pass1){
+            baseAddresses[currentModuleCount] = moduleBaseAddress;
+        }
         if(!readDefinitionList(pass1)) {
             return false;
         }
@@ -234,6 +237,25 @@ public:
         }
     }
 
+    void checkIfDefinitionInModuleBounds() {
+        // TODO: What if multiple symbols are out of bounds in a module
+        string warning;
+        for(auto symbol : symbolDefinitionOrderList) {
+            int definitionModule = symbolDefinitionLocation[symbol];
+            int moduleBaseAddress = baseAddresses[definitionModule];
+            int moduleBound = moduleSizes[definitionModule] - 1;
+            int symbolAbsoluteAddress = symbolTable[symbol];
+
+            if( symbolAbsoluteAddress - moduleBaseAddress > moduleBound) {
+                warning = "Warning: Module " + to_string(definitionModule) + ": " + symbol
+                        + " too big " + to_string(symbolTable[symbol]) + " (max="
+                        + to_string(moduleBound) + ") assume zero relative";
+                symbolTable[symbol] = moduleBaseAddress; // TODO: check
+                cout<<warning<<endl;
+            }
+        }
+    }
+
     void printSymbolTable() {
         cout<<"Symbol Table"<<endl;
         for(auto symbol : symbolDefinitionOrderList ) {
@@ -247,13 +269,14 @@ public:
     }
 
     void printMemoryMap() {
-        // TODO: implement
-        // TODO: Print the memory map and the warnings/programErrors
         int n = memoryMap.size();
         while(memoryMapPtr < n) {
             cout<<std::setfill('0')<<std::setw(3)<<memoryMapPtr<<": ";
             cout<<std::setfill('0')<<std::setw(4)<<memoryMap[memoryMapPtr];
-            cout<<" "<<programErrors[memoryMapPtr]<<endl;
+            if(!programErrors[memoryMapPtr].empty()) {
+                cout<<" "<<programErrors[memoryMapPtr];
+            }
+            cout<<endl;
 
             memoryMapPtr++;
         }
@@ -261,12 +284,14 @@ public:
 
     void runPass1() {
         while(readModule(true));
-        printSymbolTable();
     }
 
     void runPass2() {
         tokenizer.seekToBeginning();
         clearState();
+
+        checkIfDefinitionInModuleBounds();
+        printSymbolTable();
 
         cout<<endl;
         cout<<"Memory Map"<<endl;
