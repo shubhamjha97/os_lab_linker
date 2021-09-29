@@ -68,13 +68,16 @@ public:
 
     bool readLine() {
         tokens.clear();
-        if(getline (inFile, currentLine)) {
+        while(tokens.empty() && !inFile.eof()) {
+            if(!getline (inFile, currentLine)) {
+                return false;
+            }
             currentLineNumber++;
             currentTokenIdx = 0;
             tokenizeLine(currentLine);
-            return true;
         }
-        return false;
+        cout<<"Read line: "<<currentLine<<endl;
+        return !tokens.empty();
     }
 
     bool getNextToken(string &tokenBuffer){
@@ -85,7 +88,7 @@ public:
             }
         }
         tokenBuffer.append(tokens[currentTokenIdx]);
-//        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
+        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
         currentTokenIdx++;
         return true;
     }

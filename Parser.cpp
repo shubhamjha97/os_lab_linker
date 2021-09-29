@@ -167,6 +167,7 @@ public:
         // TODO: implement
         // TODO: Print the memory map and the warnings/errors
         int n = memoryMap.size();
+        cout<<endl;
         cout<<"Memory Map"<<endl;
         for(int i=0; i<n; i++) {
             cout<<std::setfill('0') << std::setw(3)<<i<<": ";
