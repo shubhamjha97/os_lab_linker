@@ -155,8 +155,10 @@ public:
                         break;
                     case 'I': // Immediate
                         addr = operand;
-                        if(addr > 10000) {
-                            addr = 9999;
+                        if(instr > 10000) {
+                            // Set instr to 9999
+                            opcode = 9;
+                            addr = 999;
                             error = "Error: Illegal immediate value; treated as 9999";
                         }
                         break;
@@ -187,7 +189,6 @@ public:
         if(!readUseList(pass1) || !readProgramText(pass1)) {
             return false;
         }
-//        cout<<"read module with base address: "<<moduleBaseAddress<<endl; // TODO: remove
         if(pass1) {
             moduleSizes.push_back(globalAddress - moduleBaseAddress);
         }
