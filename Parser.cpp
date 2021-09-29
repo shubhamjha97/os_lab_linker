@@ -10,20 +10,24 @@ class Parser {
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
+    vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
     int moduleBaseAddress;
     int globalAddress;
+    int currentModuleCount;
     vector<int> memoryMap;
 
 public:
     Parser(ifstream & inFile) : tokenizer(inFile) {
         moduleBaseAddress = 0;
         globalAddress = 0;
+        currentModuleCount = 0;
     }
 
     void clearState() {
         moduleBaseAddress = 0;
         globalAddress = 0;
+        currentModuleCount = 0;
         tokenizer.clearState();
     }
 
@@ -65,6 +69,7 @@ public:
 
     bool readUseList(bool pass1) {
         int useCount = 0;
+        useList.clear();
         if(!tokenizer.readInteger(useCount)) {
             tokenizer.parseErrorAndExit(0);
             return false;
@@ -82,6 +87,7 @@ public:
                 useList.push_back(tokenBuffer);
             }
         }
+        moduleUseLists.push_back(useList);
         cout<<"read use list"<<endl;
         return true;
     }
@@ -116,7 +122,7 @@ public:
                         break;
                     case 'E':
                         // TODO: Check if any validation is required here
-                        addr = symbolTable[useList[operand]];
+                        addr = symbolTable[moduleUseLists[currentModuleCount][operand]];
                         break;
                     case 'I':
                         addr = operand;
@@ -145,6 +151,7 @@ public:
             return false;
         }
         cout<<"read module with base address: "<<moduleBaseAddress<<endl;
+        currentModuleCount++;
         return true;
     }
 
