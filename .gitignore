@@ -1,0 +1,7 @@
+.DS_Store
+.idea/*
+lab1_assign.tar.Z
+linker
+debug_input
+cmake-build-debug/*
+lab1_assign/*
