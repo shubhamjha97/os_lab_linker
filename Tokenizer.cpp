@@ -76,7 +76,7 @@ public:
             currentTokenIdx = 0;
             tokenizeLine(currentLine);
         }
-        cout<<"Read line: "<<currentLine<<endl;
+//        cout<<"Read line: "<<currentLine<<endl;
         return !tokens.empty();
     }
 
@@ -88,7 +88,7 @@ public:
             }
         }
         tokenBuffer.append(tokens[currentTokenIdx]);
-        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
+//        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
         currentTokenIdx++;
         return true;
     }

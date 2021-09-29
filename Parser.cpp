@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 #include "Tokenizer.cpp";
 
 class Parser {
@@ -11,12 +12,15 @@ class Parser {
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
     map<string, bool> usedSymbols;
+    set<string> multipleDefinitionSymbols;
     vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
     int moduleBaseAddress;
     int globalAddress;
     int currentModuleCount;
     vector<int> memoryMap;
+    vector<string> programErrors;
+    map<string, string> symbolErrors;
 
 public:
     Parser(ifstream & inFile) : tokenizer(inFile) {
@@ -60,9 +64,14 @@ public:
             }
 
             if(pass1) {
-                symbolTable[symbol] = moduleBaseAddress + addr;
-                symbolDefinitionOrderList.push_back(symbol);
-                usedSymbols[symbol] = false;
+                // If symbol doesn't already exist in table
+                if(symbolTable.find(symbol) == symbolTable.end()) {
+                    symbolTable[symbol] = moduleBaseAddress + addr;
+                    symbolDefinitionOrderList.push_back(symbol);
+                    usedSymbols[symbol] = false;
+                } else {
+                    symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used";
+                }
             }
         }
 //        cout<<"read definition list"<<endl; // TODO: remove
@@ -119,26 +128,35 @@ public:
             if(!pass1) {
                 int addr = operand;
                 string symbol;
+                string error = "";
                 switch (opType) {
-                    case 'R':
+                    case 'R': // Relative
                         addr = operand + moduleBaseAddress;
                         break;
-                    case 'E':
-                        // TODO: Check if any validation is required here
+                    case 'E': // External
                         symbol = moduleUseLists[currentModuleCount][operand];
-                        addr = symbolTable[symbol];
-                        usedSymbols[symbol] = true;
+                        if(symbolTable.find(symbol) != symbolTable.end()) {
+                            addr = symbolTable[symbol];
+                            usedSymbols[symbol] = true;
+                        } else {
+                            error = "Error: " + symbol + " is not defined; zero used";
+                            addr = 0;
+                        }
                         break;
-                    case 'I':
+                    case 'I': // Immediate
                         addr = operand;
                         break;
-                    case 'A':
+                    case 'A': // Absolute
                         addr = operand;
-                        // TODO: Throw error when operand >= 512 (machine size)
+                        if(addr > MEMORY_SIZE) {
+                            addr = 0;
+                            error = "Error: Absolute address exceeds machine size; zero used";
+                        }
                         break;
                         // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
                 }
                 memoryMap.push_back(opcode*1000 + addr);
+                programErrors.push_back(error);
             }
 
             globalAddress++;
@@ -164,19 +182,24 @@ public:
         cout<<"Symbol Table"<<endl;
         for(auto symbol : symbolDefinitionOrderList ) {
             // Print k, v
-            cout<<symbol<<"="<<symbolTable[symbol]<<endl;
+            cout<<symbol<<"="<<symbolTable[symbol];
+            if(symbolErrors.find(symbol) != symbolErrors.end()) {
+                cout<<" "<<symbolErrors[symbol];
+            }
+            cout<<endl;
         }
     }
 
     void printMemoryMap() {
         // TODO: implement
-        // TODO: Print the memory map and the warnings/errors
+        // TODO: Print the memory map and the warnings/programErrors
         int n = memoryMap.size();
         cout<<endl;
         cout<<"Memory Map"<<endl;
         for(int i=0; i<n; i++) {
             cout<<std::setfill('0') << std::setw(3)<<i<<": ";
-            cout<<std::setfill('0') << std::setw(4)<<memoryMap[i]<<endl;
+            cout<<std::setfill('0') << std::setw(4)<<memoryMap[i];
+            cout << " " << programErrors[i] << endl;
         }
     }
 
