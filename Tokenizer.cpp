@@ -2,6 +2,7 @@
 #include<string>
 #include<string.h>
 #include<vector>
+#include <fstream>
 
 using namespace std;
 
@@ -12,9 +13,10 @@ class Tokenizer {
     int currentTokenIdx;
     vector<string> tokens;
     const char* delimiters = " \t\n";
+    ifstream &inFile;
 
 public:
-    Tokenizer() {
+    Tokenizer(ifstream & in) : inFile(in) {
         currentTokenIdx = 0;
         currentLineNumber = 0;
         readLine();
@@ -32,7 +34,7 @@ public:
 
     bool readLine() {
         tokens.clear();
-        if(std::getline (std::cin, currentLine)) {
+        if(getline (inFile, currentLine)) {
             currentLineNumber++;
             currentTokenIdx = 0;
             tokenizeLine(currentLine);

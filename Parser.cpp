@@ -10,8 +10,7 @@ class Parser {
     int globalAddress;
 
 public:
-
-    Parser() {
+    Parser(ifstream & inFile) : tokenizer(inFile) {
         moduleBaseAddress = 0;
         globalAddress = 0;
     }
@@ -24,7 +23,7 @@ public:
         // TODO: implement method which prints a warning
     }
 
-    bool readDefinitionList() {
+    bool readDefinitionList(bool pass1) {
         int defCount = 0;
         string symbol;
         int addr;
@@ -42,13 +41,15 @@ public:
                 return false;
             }
 
-            symbolTable[symbol] = moduleBaseAddress + addr;
-            symbolDefinitionOrderList.push_back(symbol);
+            if(pass1) {
+                symbolTable[symbol] = moduleBaseAddress + addr;
+                symbolDefinitionOrderList.push_back(symbol);
+            }
         }
         return true;
     }
 
-    bool readUseList() {
+    bool readUseList(bool pass1) {
         int useCount = 0;
         if(!tokenizer.readInteger(useCount)) {
             return false;
@@ -58,12 +59,14 @@ public:
             if(!tokenizer.getNextToken(tokenBuffer)) {
                 return false;
             }
-            useList.push_back(tokenBuffer);
+            if(pass1) {
+                useList.push_back(tokenBuffer);
+            }
         }
         return true;
     }
 
-    bool readProgramText() {
+    bool readProgramText(bool pass1) {
         int codeCount = 0;
         if(!tokenizer.readInteger(codeCount)){
             return false;
@@ -95,6 +98,7 @@ public:
                     break;
                 // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
             }
+            // TODO: Add pass-specific logic
 
             globalAddress++;
         }
@@ -106,10 +110,10 @@ public:
         return false;
     }
 
-    bool readModule() {
+    bool readModule(bool pass1=true) {
         moduleBaseAddress = globalAddress;
         // TODO: Debug
-        if(!readDefinitionList() || !readUseList() || !readProgramText()) {
+        if(!readDefinitionList(pass1) || !readUseList(pass1) || !readProgramText(pass1)) {
             return false;
         }
         cout<<"read module with base address: "<<moduleBaseAddress<<endl;
@@ -125,6 +129,8 @@ public:
     }
 
     void printMemoryMap() {
+        // TODO: implement
+        // TODO: Print the memory map and the warnings/errors
         return;
     }
 
@@ -134,6 +140,7 @@ public:
     }
 
     void runPass2() {
+        // TODO: Seek to beginning of stdin
         while(readModule());
         printMemoryMap();
     }
