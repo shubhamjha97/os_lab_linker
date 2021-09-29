@@ -1,46 +1,68 @@
-//
-// Created by Shubham Jha on 9/28/21.
-//
-
-#include "Tokenizer.h"
 #include <iostream>
 #include<string>
-#include <string.h>
+#include<string.h>
+#include<vector>
+
 using namespace std;
 
-// TODO: Read lines from stdin
-// TODO: Read file line by line, keep track of current line, print current line
-
 class Tokenizer {
-    // TODO: Code tokenzier
-    // TODO: create a main class
-    // TODO: Write Makefile
-    // TODO: Add sample input
     string currentLine;
+    int currentLineNumber;
+    int currentTokenIdx;
+    vector<string> tokens;
+    const char* delimiters = " \t\n";
 
 public:
-    char *pch;
+    Tokenizer() {
+        currentTokenIdx = 0;
+        currentLineNumber = 0;
+        readLine();
+    }
 
-    string getToken() {
-        std::getline(std::cin, currentLine);
-
-        char *dup = strdup(currentLine.c_str());
-        pch = strtok (dup," ,.-");
-        while (pch != NULL)
+    void tokenizeLine(string line) {
+        char* token;
+        token = strtok(&line[0], delimiters);
+        while (token != NULL)
         {
-            cout<<pch<<endl;
-            pch = strtok(NULL, " ,.-");
+            tokens.push_back(string(token));
+            token = strtok (NULL, delimiters);
         }
-        free(dup);
-        return "Done";
+    }
+
+    bool readLine() {
+        tokens.clear();
+        if(std::getline (std::cin, currentLine)) {
+            currentLineNumber++;
+            currentTokenIdx = 0;
+            tokenizeLine(currentLine);
+            return true;
+        }
+        return false;
+    }
+
+    bool getNextToken(string &tokenBuffer){
+        tokenBuffer.clear();
+        if(currentTokenIdx == tokens.size()) {
+            if(!readLine()) {
+                return false;
+            }
+        }
+        tokenBuffer.append(tokens[currentTokenIdx]);
+        currentTokenIdx++;
+        return true;
+    }
+
+    static bool isInteger(string token) {
+        // TODO: Implement
+        return true;
+    }
+
+    int readInteger(int &intBuffer) {
+        string tokenBuffer;
+        if(!getNextToken(tokenBuffer) || !isInteger(tokenBuffer)) {
+            return false;
+        }
+        intBuffer = (int)stoi(tokenBuffer);
+        return true;
     }
 };
-
-int main() {
-    Tokenizer tokenizer = Tokenizer();
-    for(int i=0; i<10; i++) {
-        cout<<tokenizer.getToken()<<endl;
-    }
-    cout<<"DONE"<<endl;
-    return 0;
-}
