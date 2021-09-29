@@ -11,8 +11,8 @@ class Parser {
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
-    map<string, bool> usedSymbols;
-    set<string> multipleDefinitionSymbols;
+    map<string, bool> usedSymbols; // TODO: remove
+    set<string> multipleDefinitionSymbols; // TODO: remove
     vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
     int moduleBaseAddress;
@@ -21,6 +21,7 @@ class Parser {
     vector<int> memoryMap;
     vector<string> programErrors;
     map<string, string> symbolErrors;
+    vector<int> moduleSizes;
 
 public:
     Parser(ifstream & inFile) : tokenizer(inFile) {
@@ -132,8 +133,17 @@ public:
                 switch (opType) {
                     case 'R': // Relative
                         addr = operand + moduleBaseAddress;
+                        if(addr > moduleSizes[currentModuleCount]) {
+                            addr = moduleBaseAddress; // TODO: check logic
+                            error = "Error: Relative address exceeds module size; zero used";
+                        }
                         break;
                     case 'E': // External
+                        if(operand > moduleUseLists[currentModuleCount].size()) {
+                            addr = operand; // Treat as immediate
+                            error = "Error: External address exceeds length of uselist; treated as immediate";
+                            break;
+                        }
                         symbol = moduleUseLists[currentModuleCount][operand];
                         if(symbolTable.find(symbol) != symbolTable.end()) {
                             addr = symbolTable[symbol];
@@ -145,6 +155,10 @@ public:
                         break;
                     case 'I': // Immediate
                         addr = operand;
+                        if(addr > 10000) {
+                            addr = 9999;
+                            error = "Error: Illegal immediate value; treated as 9999";
+                        }
                         break;
                     case 'A': // Absolute
                         addr = operand;
@@ -174,6 +188,9 @@ public:
             return false;
         }
 //        cout<<"read module with base address: "<<moduleBaseAddress<<endl; // TODO: remove
+        if(pass1) {
+            moduleSizes.push_back(globalAddress - moduleBaseAddress);
+        }
         currentModuleCount++;
         return true;
     }
