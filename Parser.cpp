@@ -8,6 +8,7 @@ class Parser {
     static const int USECOUNT_LIMIT = 16;
     static const int MEMORY_SIZE = 512;
 
+    int memoryMapPtr = 0;
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
@@ -21,6 +22,7 @@ class Parser {
     vector<int> memoryMap;
     vector<string> programErrors;
     map<string, string> symbolErrors;
+    vector<string> warnings;
     vector<int> moduleSizes;
 
 public:
@@ -34,11 +36,8 @@ public:
         moduleBaseAddress = 0;
         globalAddress = 0;
         currentModuleCount = 0;
+        memoryMapPtr = 0;
         tokenizer.clearState();
-    }
-
-    void warn() {
-        // TODO: implement method which prints a warning
     }
 
     bool readDefinitionList(bool pass1) {
@@ -100,7 +99,7 @@ public:
             }
         }
         moduleUseLists.push_back(useList);
-//        cout<<"read use list"<<endl; // TODO: remove
+        usedSymbols.clear();
         return true;
     }
 
@@ -139,7 +138,7 @@ public:
                         }
                         break;
                     case 'E': // External
-                        if(operand > moduleUseLists[currentModuleCount].size()) {
+                        if(operand >= moduleUseLists[currentModuleCount].size()) {
                             addr = operand; // Treat as immediate
                             error = "Error: External address exceeds length of uselist; treated as immediate";
                             break;
@@ -190,6 +189,7 @@ public:
 
     bool readModule(bool pass1=true) {
         moduleBaseAddress = globalAddress;
+        warnings.clear();
         if(!readDefinitionList(pass1)) {
             return false;
         }
@@ -201,6 +201,17 @@ public:
         }
         currentModuleCount++;
         return true;
+    }
+
+    void checkIfAllUseListModulesUsed() {
+        string warning;
+        for (auto symbol : moduleUseLists[currentModuleCount-1]) {
+            if(!usedSymbols[symbol]) {
+                warning = "Warning: Module "+ to_string(currentModuleCount) + ": " + symbol
+                        + " appeared in the uselist but was not actually used";
+                cout<<warning<<endl;
+            }
+        }
     }
 
     void printSymbolTable() {
@@ -219,27 +230,31 @@ public:
         // TODO: implement
         // TODO: Print the memory map and the warnings/programErrors
         int n = memoryMap.size();
-        cout<<endl;
-        cout<<"Memory Map"<<endl;
-        for(int i=0; i<n; i++) {
-            cout<<std::setfill('0') << std::setw(3)<<i<<": ";
-            cout<<std::setfill('0') << std::setw(4)<<memoryMap[i];
-            cout << " " << programErrors[i] << endl;
+        while(memoryMapPtr < n) {
+            cout<<std::setfill('0')<<std::setw(3)<<memoryMapPtr<<": ";
+            cout<<std::setfill('0')<<std::setw(4)<<memoryMap[memoryMapPtr];
+            cout<<" "<<programErrors[memoryMapPtr]<<endl;
+
+            memoryMapPtr++;
         }
     }
 
     void runPass1() {
         while(readModule(true));
         printSymbolTable();
-//        cout<<"pass 1 done"<<endl; // TODO: remove
     }
 
     void runPass2() {
-//        cout<<"starting pass 2"<<endl; // TODO: remove
         tokenizer.seekToBeginning();
         clearState();
-        while(readModule(false));
-        printMemoryMap();
+
+        cout<<endl;
+        cout<<"Memory Map"<<endl;
+
+        while(readModule(false)) {
+            printMemoryMap();
+            checkIfAllUseListModulesUsed();
+        }
 //        cout<<"pass 2 done"<<endl; // TODO: remove
     }
 };
