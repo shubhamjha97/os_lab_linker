@@ -137,7 +137,7 @@ public:
                 switch (opType) {
                     case 'R': // Relative
                         addr = operand + moduleBaseAddress;
-                        if(addr > moduleSizes[currentModuleCount]) {
+                        if(operand > moduleSizes[currentModuleCount]) {
                             addr = moduleBaseAddress; // TODO: check logic
                             error = "Error: Relative address exceeds module size; zero used";
                         }
