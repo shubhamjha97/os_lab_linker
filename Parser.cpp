@@ -12,7 +12,11 @@ class Parser {
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
-    map<string, bool> usedSymbols; // TODO: remove
+
+    map<string, bool> usedSymbols;
+    map<string, bool> globalUsedSymbols;
+    map<string, int> symbolDefinitionLocation;
+
     set<string> multipleDefinitionSymbols; // TODO: remove
     vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
@@ -68,6 +72,7 @@ public:
                 if(symbolTable.find(symbol) == symbolTable.end()) {
                     symbolTable[symbol] = moduleBaseAddress + addr;
                     symbolDefinitionOrderList.push_back(symbol);
+                    symbolDefinitionLocation[symbol] = currentModuleCount;
                     usedSymbols[symbol] = false;
                 } else {
                     symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used";
@@ -147,6 +152,7 @@ public:
                         if(symbolTable.find(symbol) != symbolTable.end()) {
                             addr = symbolTable[symbol];
                             usedSymbols[symbol] = true;
+                            globalUsedSymbols[symbol] = true;
                         } else {
                             error = "Error: " + symbol + " is not defined; zero used";
                             addr = 0;
@@ -203,6 +209,20 @@ public:
         return true;
     }
 
+    void checkIfAllDefinedModulesUsed() {
+        string warning, symbol;
+        int definitionLocation;
+
+        for (auto kv_pair : symbolDefinitionLocation) {
+            symbol = kv_pair.first;
+            definitionLocation = kv_pair.second;
+            if(!globalUsedSymbols[symbol]) {
+                warning = "Warning: Module " + to_string(definitionLocation+1) + ": " + symbol + " was defined but never used";
+                cout<<warning<<endl;
+            }
+        }
+    }
+
     void checkIfAllUseListModulesUsed() {
         string warning;
         for (auto symbol : moduleUseLists[currentModuleCount-1]) {
@@ -255,6 +275,8 @@ public:
             printMemoryMap();
             checkIfAllUseListModulesUsed();
         }
+        cout<<endl;
+        checkIfAllDefinedModulesUsed();
 //        cout<<"pass 2 done"<<endl; // TODO: remove
     }
 };
