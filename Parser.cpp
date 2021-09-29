@@ -247,7 +247,7 @@ public:
             int symbolAbsoluteAddress = symbolTable[symbol];
 
             if( symbolAbsoluteAddress - moduleBaseAddress > moduleBound) {
-                warning = "Warning: Module " + to_string(definitionModule) + ": " + symbol
+                warning = "Warning: Module " + to_string(definitionModule+1) + ": " + symbol
                         + " too big " + to_string(symbolTable[symbol] - moduleBaseAddress) + " (max="
                         + to_string(moduleBound) + ") assume zero relative";
                 symbolTable[symbol] = moduleBaseAddress; // TODO: check
@@ -302,6 +302,6 @@ public:
         }
         cout<<endl;
         checkIfAllDefinedModulesUsed();
-//        cout<<"pass 2 done"<<endl; // TODO: remove
+        cout<<endl;
     }
 };
