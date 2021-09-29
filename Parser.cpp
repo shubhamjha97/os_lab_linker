@@ -2,26 +2,48 @@
 #include "Tokenizer.cpp";
 
 class Parser {
-    Tokenizer tokenizer;
-    map<string, int> definitionList;
-    vector<string> useList;
     string tokenBuffer;
+    Tokenizer tokenizer;
+    vector<string> useList, symbolDefinitionOrderList;
+    map<string, int> symbolTable;
+    int moduleBaseAddress;
+    int globalAddress;
 
 public:
+
+    Parser() {
+        moduleBaseAddress = 0;
+        globalAddress = 0;
+    }
+
+    void thwowParseError() {
+        // TODO: implement method which uses the current context to throw an exception
+    }
+
+    void warn() {
+        // TODO: implement method which prints a warning
+    }
 
     bool readDefinitionList() {
         int defCount = 0;
         string symbol;
         int addr;
-        tokenizer.readInteger(defCount);
+        if(!tokenizer.readInteger(defCount)) {
+            return false;
+        }
 
         while(defCount--) {
-            if(!tokenizer.getNextToken(tokenBuffer)) {
+            if(!tokenizer.readSymbol(tokenBuffer)) {
                 return false;
             }
             symbol = tokenBuffer;
-            tokenizer.readInteger(addr);
-            definitionList[symbol] = addr;
+            if(!tokenizer.readInteger(addr)) {
+                // TODO: Check if any validation is needed here
+                return false;
+            }
+
+            symbolTable[symbol] = moduleBaseAddress + addr;
+            symbolDefinitionOrderList.push_back(symbol);
         }
         return true;
     }
@@ -47,26 +69,72 @@ public:
             return false;
         }
         while(codeCount--) {
-            // TODO:
+            char opType;
+            int instr = 0;
+            if(!tokenizer.readOpType(opType) || !tokenizer.readInstr(instr)) {
+                return false;
+            }
+
+            int operand = tokenizer.getOperand(instr), addr = operand;
+
+            switch (opType) {
+                case 'R':
+                    // TODO: Calculate moduleBaseAddress
+                    addr = operand + moduleBaseAddress;
+                    break;
+                case 'E':
+                    // TODO: Get relative address of symbols defined in the useList
+                    // TODO: Symbols can even be defined later. Figure out how to do this.
+                    break;
+                case 'I':
+                    addr = operand;
+                    break;
+                case 'A':
+                    addr = operand;
+                    // TODO: Throw error when operand >= 512 (machine size)
+                    break;
+                // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
+            }
+
+            globalAddress++;
         }
-        // TODO: Return false on failure
         return true;
     }
 
+    bool processProgramText() {
+        // TODO: Logic for pass2.
+        return false;
+    }
+
     bool readModule() {
-        if(!readDefinitionList() || !readUseList() || !readProgramText) {
+        moduleBaseAddress = globalAddress;
+        // TODO: Debug
+        if(!readDefinitionList() || !readUseList() || !readProgramText()) {
             return false;
         }
+        cout<<"read module with base address: "<<moduleBaseAddress<<endl;
         return true;
+    }
+
+    void printSymbolTable() {
+        cout<<"Symbol Table"<<endl;
+        for(auto symbol : symbolDefinitionOrderList ) {
+            // Print k, v
+            cout<<symbol<<"="<<symbolTable[symbol]<<endl;
+        }
+    }
+
+    void printMemoryMap() {
+        return;
     }
 
     void runPass1() {
         while(readModule());
-        return;
+        printSymbolTable();
     }
 
     void runPass2() {
-        cout<<"Pass 2 not implemented"<<endl;
-        return;
+        while(readModule());
+        printMemoryMap();
     }
 };
