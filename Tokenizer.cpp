@@ -100,6 +100,7 @@ public:
             return false;
         }
         if(symbolSize==0 || !isalpha(token[0])) {
+            parseErrorAndExit(1);
             return false;
         }
         for(int i=1; i<symbolSize; i++) {
@@ -111,7 +112,11 @@ public:
     }
 
     bool isValidInteger(string token) {
-        // TODO: Implement
+        for(auto ch : token) {
+            if(!isnumber(ch)) {
+                return false;
+            }
+        }
         return true;
     }
 
