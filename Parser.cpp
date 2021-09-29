@@ -248,7 +248,7 @@ public:
 
             if( symbolAbsoluteAddress - moduleBaseAddress > moduleBound) {
                 warning = "Warning: Module " + to_string(definitionModule) + ": " + symbol
-                        + " too big " + to_string(symbolTable[symbol]) + " (max="
+                        + " too big " + to_string(symbolTable[symbol] - moduleBaseAddress) + " (max="
                         + to_string(moduleBound) + ") assume zero relative";
                 symbolTable[symbol] = moduleBaseAddress; // TODO: check
                 cout<<warning<<endl;
