@@ -10,6 +10,6 @@ int main(int argc, char *argv[]) {
     Parser parser = Parser(inFile);
     parser.runPass1();
     parser.runPass2();
-    cout<<"done"<<endl;
+//    cout<<"done"<<endl; // TODO: remove
     return 0;
 }

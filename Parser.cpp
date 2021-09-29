@@ -10,6 +10,7 @@ class Parser {
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
+    map<string, bool> usedSymbols;
     vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
     int moduleBaseAddress;
@@ -61,9 +62,10 @@ public:
             if(pass1) {
                 symbolTable[symbol] = moduleBaseAddress + addr;
                 symbolDefinitionOrderList.push_back(symbol);
+                usedSymbols[symbol] = false;
             }
         }
-        cout<<"read definition list"<<endl;
+//        cout<<"read definition list"<<endl; // TODO: remove
         return true;
     }
 
@@ -88,7 +90,7 @@ public:
             }
         }
         moduleUseLists.push_back(useList);
-        cout<<"read use list"<<endl;
+//        cout<<"read use list"<<endl; // TODO: remove
         return true;
     }
 
@@ -116,13 +118,16 @@ public:
 
             if(!pass1) {
                 int addr = operand;
+                string symbol;
                 switch (opType) {
                     case 'R':
                         addr = operand + moduleBaseAddress;
                         break;
                     case 'E':
                         // TODO: Check if any validation is required here
-                        addr = symbolTable[moduleUseLists[currentModuleCount][operand]];
+                        symbol = moduleUseLists[currentModuleCount][operand];
+                        addr = symbolTable[symbol];
+                        usedSymbols[symbol] = true;
                         break;
                     case 'I':
                         addr = operand;
@@ -138,7 +143,7 @@ public:
 
             globalAddress++;
         }
-        cout<<"read program text"<<endl;
+//        cout<<"read program text"<<endl; // TODO: remove
         return true;
     }
 
@@ -150,7 +155,7 @@ public:
         if(!readUseList(pass1) || !readProgramText(pass1)) {
             return false;
         }
-        cout<<"read module with base address: "<<moduleBaseAddress<<endl;
+//        cout<<"read module with base address: "<<moduleBaseAddress<<endl; // TODO: remove
         currentModuleCount++;
         return true;
     }
@@ -178,15 +183,15 @@ public:
     void runPass1() {
         while(readModule(true));
         printSymbolTable();
-        cout<<"pass 1 done"<<endl;
+//        cout<<"pass 1 done"<<endl; // TODO: remove
     }
 
     void runPass2() {
-        cout<<"starting pass 2"<<endl;
+//        cout<<"starting pass 2"<<endl; // TODO: remove
         tokenizer.seekToBeginning();
         clearState();
         while(readModule(false));
         printMemoryMap();
-        cout<<"pass 2 done"<<endl;
+//        cout<<"pass 2 done"<<endl; // TODO: remove
     }
 };
