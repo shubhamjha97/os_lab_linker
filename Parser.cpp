@@ -2,6 +2,11 @@
 #include "Tokenizer.cpp";
 
 class Parser {
+
+    static const int DEFCOUNT_LIMIT = 16;
+    static const int USECOUNT_LIMIT = 16;
+    static const int MEMORY_SIZE = 512;
+
     string tokenBuffer;
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
@@ -31,12 +36,17 @@ public:
             return false;
         }
 
+        if(defCount > DEFCOUNT_LIMIT) {
+            tokenizer.parseErrorAndExit(4);
+        }
+
         while(defCount--) {
             if(!tokenizer.readSymbol(tokenBuffer)) {
                 return false;
             }
             symbol = tokenBuffer;
             if(!tokenizer.readInteger(addr)) {
+                tokenizer.parseErrorAndExit(0);
                 // TODO: Check if any validation is needed here
                 return false;
             }
@@ -46,14 +56,20 @@ public:
                 symbolDefinitionOrderList.push_back(symbol);
             }
         }
+        cout<<"read definition list"<<endl;
         return true;
     }
 
     bool readUseList(bool pass1) {
         int useCount = 0;
         if(!tokenizer.readInteger(useCount)) {
+            tokenizer.parseErrorAndExit(0);
             return false;
         };
+
+        if(useCount > USECOUNT_LIMIT) {
+            tokenizer.parseErrorAndExit(5);
+        }
 
         while(useCount--) {
             if(!tokenizer.getNextToken(tokenBuffer)) {
@@ -63,18 +79,26 @@ public:
                 useList.push_back(tokenBuffer);
             }
         }
+        cout<<"read use list"<<endl;
         return true;
     }
 
     bool readProgramText(bool pass1) {
         int codeCount = 0;
         if(!tokenizer.readInteger(codeCount)){
+            tokenizer.parseErrorAndExit(0);
             return false;
         }
+
+        if(codeCount + globalAddress - 1 >= MEMORY_SIZE) {
+            tokenizer.parseErrorAndExit(6);
+        }
+
         while(codeCount--) {
             char opType;
             int instr = 0;
             if(!tokenizer.readOpType(opType) || !tokenizer.readInstr(instr)) {
+                tokenizer.parseErrorAndExit(0); // TODO: check
                 return false;
             }
 
@@ -102,6 +126,7 @@ public:
 
             globalAddress++;
         }
+        cout<<"read program text"<<endl;
         return true;
     }
 
@@ -113,7 +138,10 @@ public:
     bool readModule(bool pass1=true) {
         moduleBaseAddress = globalAddress;
         // TODO: Debug
-        if(!readDefinitionList(pass1) || !readUseList(pass1) || !readProgramText(pass1)) {
+        if(!readDefinitionList(pass1)) {
+            return false;
+        }
+        if(!readUseList(pass1) || !readProgramText(pass1)) {
             return false;
         }
         cout<<"read module with base address: "<<moduleBaseAddress<<endl;
@@ -135,13 +163,17 @@ public:
     }
 
     void runPass1() {
-        while(readModule());
+        while(readModule(true));
         printSymbolTable();
+        cout<<"pass 1 done"<<endl;
     }
 
     void runPass2() {
-        // TODO: Seek to beginning of stdin
-        while(readModule());
+        cout<<"starting pass 2"<<endl;
+        tokenizer.seekToBeginning();
+        tokenizer.clearState();
+        while(readModule(false));
         printMemoryMap();
+        cout<<"pass 2 done"<<endl;
     }
 };

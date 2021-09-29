@@ -2,6 +2,6 @@
 .idea/*
 lab1_assign.tar.Z
 linker
-debug_input
+lab1_assign/debug_input
 cmake-build-debug/*
 lab1_assign/*
