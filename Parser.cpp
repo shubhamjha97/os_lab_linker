@@ -171,6 +171,13 @@ public:
                         break;
                         // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
                 }
+
+                if(opcode >=10 ) {
+                    error = "Error: Illegal opcode; treated as 9999";
+                    opcode = 9;
+                    addr = 999;
+                }
+
                 memoryMap.push_back(opcode*1000 + addr);
                 programErrors.push_back(error);
             }
