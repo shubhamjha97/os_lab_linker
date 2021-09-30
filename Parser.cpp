@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 #include <iomanip>
 #include "Tokenizer.cpp"
 
@@ -15,7 +16,7 @@ class Parser {
 
     vector<bool> usedSymbols;
     map<string, bool> globalUsedSymbols;
-    map<string, int> symbolDefinitionLocation;
+    vector<int> symbolDefinitionLocation;
     map<int, int> baseAddresses;
 
     vector<vector<string> > moduleUseLists;
@@ -69,11 +70,11 @@ public:
                 // If symbol doesn't already exist in table
                 if(symbolTable.find(symbol) == symbolTable.end()) {
                     symbolTable[symbol] = moduleBaseAddress + addr;
-                    symbolDefinitionOrderList.push_back(symbol);
-                    symbolDefinitionLocation[symbol] = currentModuleCount;
                 } else {
                     symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used"; // Rule 2
                 }
+                symbolDefinitionOrderList.push_back(symbol);
+                symbolDefinitionLocation.push_back(currentModuleCount);
             }
         }
         return true;
@@ -211,14 +212,19 @@ public:
 
     void checkIfAllDefinedModulesUsed() { // Rule 4
         string warning, symbol;
-        int definitionLocation;
+        int definitionLocation, n = symbolDefinitionOrderList.size();
+        set<string> alreadyPrintedSymbols;
 
-        for (auto symbol : symbolDefinitionOrderList) {
-            definitionLocation = symbolDefinitionLocation[symbol];
-            if(!globalUsedSymbols[symbol]) {
-                warning = "Warning: Module " + to_string(definitionLocation+1)
-                        + ": " + symbol + " was defined but never used";
-                cout<<warning<<endl;
+        for (int i=0; i<n; i++) {
+            symbol = symbolDefinitionOrderList[i];
+            if(alreadyPrintedSymbols.find(symbol) == alreadyPrintedSymbols.end()) {
+                definitionLocation = symbolDefinitionLocation[i];
+                if (!globalUsedSymbols[symbol]) {
+                    warning = "Warning: Module " + to_string(definitionLocation + 1)
+                              + ": " + symbol + " was defined but never used";
+                    cout << warning << endl;
+                }
+                alreadyPrintedSymbols.insert(symbol);
             }
         }
     }
@@ -238,8 +244,11 @@ public:
 
     void checkIfDefinitionInModuleBounds() { // Rule 5
         string warning;
-        for(auto symbol : symbolDefinitionOrderList) {
-            int definitionModule = symbolDefinitionLocation[symbol];
+        int n = symbolDefinitionOrderList.size();
+
+        for(int i=0; i<n; i++) {
+            string symbol = symbolDefinitionOrderList[i];
+            int definitionModule = symbolDefinitionLocation[i];
             int moduleBaseAddress = baseAddresses[definitionModule];
             int moduleBound = moduleSizes[definitionModule] - 1;
             int symbolAbsoluteAddress = symbolTable[symbol];
@@ -256,12 +265,16 @@ public:
 
     void printSymbolTable() {
         cout<<"Symbol Table"<<endl;
-        for(auto symbol : symbolDefinitionOrderList ) {
-            cout<<symbol<<"="<<symbolTable[symbol];
-            if(symbolErrors.find(symbol) != symbolErrors.end()) {
-                cout<<" "<<symbolErrors[symbol]; // Print errors related to the symbol
+        set<string> alreadyPrintedSymbols;
+        for(auto symbol : symbolDefinitionOrderList) {
+            if(alreadyPrintedSymbols.find(symbol) == alreadyPrintedSymbols.end()) {
+                cout << symbol << "=" << symbolTable[symbol];
+                if (symbolErrors.find(symbol) != symbolErrors.end()) {
+                    cout << " " << symbolErrors[symbol]; // Print errors related to the symbol
+                }
+                cout << endl;
+                alreadyPrintedSymbols.insert(symbol);
             }
-            cout<<endl;
         }
     }
 
