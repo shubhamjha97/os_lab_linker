@@ -71,7 +71,6 @@ public:
                     symbolTable[symbol] = moduleBaseAddress + addr;
                     symbolDefinitionOrderList.push_back(symbol);
                     symbolDefinitionLocation[symbol] = currentModuleCount;
-                    usedSymbols[symbol] = false;
                 } else {
                     symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used"; // Rule 2
                 }
