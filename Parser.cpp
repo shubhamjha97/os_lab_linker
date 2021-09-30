@@ -169,7 +169,7 @@ public:
                         break;
                     case 'A': // Absolute
                         addr = operand;
-                        if(addr > MACHINE_SIZE) {
+                        if(addr >= MACHINE_SIZE) {
                             addr = 0;
                             error = "Error: Absolute address exceeds machine size; zero used"; // Rule 8
                         }
