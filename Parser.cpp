@@ -18,7 +18,6 @@ class Parser {
     map<string, int> symbolDefinitionLocation;
     map<int, int> baseAddresses;
 
-    set<string> multipleDefinitionSymbols; // TODO: remove
     vector<vector<string> > moduleUseLists;
     map<string, int> symbolTable;
     int moduleBaseAddress;
@@ -189,7 +188,6 @@ public:
 
             globalAddress++;
         }
-//        cout<<"read program text"<<endl; // TODO: remove
         return true;
     }
 

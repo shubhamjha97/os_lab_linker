@@ -20,7 +20,7 @@ public:
     Tokenizer(ifstream & in) : inFile(in) {
         currentTokenIdx = 0;
         currentLineNumber = 0;
-        currentLineOffset = 0; // TODO: increment this properly
+        currentLineOffset = 0;
     }
 
     void clearState() {
@@ -69,13 +69,7 @@ public:
                 tokenIdx = tokenIdx + tokens[tokens.size()-1].first.size();
                 tokens.push_back(make_pair("", tokenIdx));
             }
-            // TODO: If line ends, don't return that token but update the line offset
-            // TODO: remove
-            if(token) {
-                cout<<"Token: "<<token<<" start_idx: "<<tokenIdx<<endl; // TODO: remove
-            }
         }
-        return;
     }
 
     bool readLine() {
@@ -94,7 +88,7 @@ public:
     bool getNextToken(string &tokenBuffer){
         if(currentTokenIdx == (tokens.size() - 1) || currentTokenIdx == tokens.size()) {
             if(!readLine()) {
-                currentLineOffset = tokens[currentTokenIdx].second; // TODO: check
+                currentLineOffset = tokens[currentTokenIdx].second;
                 return false;
             }
         }
