@@ -1,13 +1,13 @@
 #include <map>
 #include <set>
 #include <iomanip>
-#include "Tokenizer.cpp";
+#include "Tokenizer.cpp"
 
 class Parser {
 
     static const int DEFCOUNT_LIMIT = 16;
     static const int USECOUNT_LIMIT = 16;
-    static const int MEMORY_SIZE = 512;
+    static const int MACHINE_SIZE = 512;
 
     int memoryMapPtr = 0;
     string tokenBuffer;
@@ -64,7 +64,6 @@ public:
             symbol = tokenBuffer;
             if(!tokenizer.readInteger(addr)) {
                 tokenizer.parseErrorAndExit(0);
-                // TODO: Check if any validation is needed here
                 return false;
             }
 
@@ -76,7 +75,7 @@ public:
                     symbolDefinitionLocation[symbol] = currentModuleCount;
                     usedSymbols[symbol] = false;
                 } else {
-                    symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used";
+                    symbolErrors[symbol] = "Error: This variable is multiple times defined; first value used"; // Rule 2
                 }
             }
         }
@@ -115,7 +114,7 @@ public:
             return false;
         }
 
-        if(pass1 && (codeCount + globalAddress - 1 >= MEMORY_SIZE)) {
+        if(pass1 && (codeCount + globalAddress - 1 >= MACHINE_SIZE)) {
             tokenizer.parseErrorAndExit(6);
         }
 
@@ -138,47 +137,47 @@ public:
                     case 'R': // Relative
                         addr = operand + moduleBaseAddress;
                         if(operand > moduleSizes[currentModuleCount]) {
-                            addr = moduleBaseAddress; // TODO: check logic
-                            error = "Error: Relative address exceeds module size; zero used";
+                            addr = moduleBaseAddress; // Use relative 0 address i.e. the module base address
+                            error = "Error: Relative address exceeds module size; zero used"; // Rule 9
                         }
                         break;
                     case 'E': // External
                         if(operand >= moduleUseLists[currentModuleCount].size()) {
                             addr = operand; // Treat as immediate
-                            error = "Error: External address exceeds length of uselist; treated as immediate";
+                            error = "Error: External address exceeds length of uselist; treated as immediate"; // Rule 6
                             break;
                         }
                         symbol = moduleUseLists[currentModuleCount][operand];
                         if(symbolTable.find(symbol) != symbolTable.end()) {
                             addr = symbolTable[symbol];
                         } else {
-                            error = "Error: " + symbol + " is not defined; zero used";
+                            error = "Error: " + symbol + " is not defined; zero used"; // Rule 3
                             addr = 0;
                         }
-                        usedSymbols[symbol] = true;
-                        globalUsedSymbols[symbol] = true;
+                        usedSymbols[symbol] = true; // Mark symbol as used in the current module
+                        globalUsedSymbols[symbol] = true; // Mark symbol as used globally
                         break;
                     case 'I': // Immediate
                         addr = operand;
-                        if(instr > 10000) {
+                        if(instr >= 10000) {
                             // Set instr to 9999
                             opcode = 9;
                             addr = 999;
-                            error = "Error: Illegal immediate value; treated as 9999";
+                            error = "Error: Illegal immediate value; treated as 9999"; // Rule 10
                         }
                         break;
                     case 'A': // Absolute
                         addr = operand;
-                        if(addr > MEMORY_SIZE) {
+                        if(addr > MACHINE_SIZE) {
                             addr = 0;
-                            error = "Error: Absolute address exceeds machine size; zero used";
+                            error = "Error: Absolute address exceeds machine size; zero used"; // Rule 8
                         }
                         break;
-                        // TODO: Maybe, for all cases, ensure that address doesn't go >= 512
                 }
 
                 if(opcode >=10 ) {
-                    error = "Error: Illegal opcode; treated as 9999";
+                    error = "Error: Illegal opcode; treated as 9999"; // Rule 11
+                    // Set instr to 9999
                     opcode = 9;
                     addr = 999;
                 }
@@ -210,7 +209,7 @@ public:
         return true;
     }
 
-    void checkIfAllDefinedModulesUsed() {
+    void checkIfAllDefinedModulesUsed() { // Rule 4
         string warning, symbol;
         int definitionLocation;
 
@@ -218,13 +217,14 @@ public:
             symbol = kv_pair.first;
             definitionLocation = kv_pair.second;
             if(!globalUsedSymbols[symbol]) {
-                warning = "Warning: Module " + to_string(definitionLocation+1) + ": " + symbol + " was defined but never used";
+                warning = "Warning: Module " + to_string(definitionLocation+1)
+                        + ": " + symbol + " was defined but never used";
                 cout<<warning<<endl;
             }
         }
     }
 
-    void checkIfAllUseListModulesUsed() {
+    void checkIfAllUseListModulesUsed() { // Rule 7
         string warning;
         for (auto symbol : moduleUseLists[currentModuleCount-1]) {
             if(!usedSymbols[symbol]) {
@@ -235,8 +235,7 @@ public:
         }
     }
 
-    void checkIfDefinitionInModuleBounds() {
-        // TODO: What if multiple symbols are out of bounds in a module
+    void checkIfDefinitionInModuleBounds() { // Rule 5
         string warning;
         for(auto symbol : symbolDefinitionOrderList) {
             int definitionModule = symbolDefinitionLocation[symbol];
@@ -248,8 +247,8 @@ public:
                 warning = "Warning: Module " + to_string(definitionModule+1) + ": " + symbol
                         + " too big " + to_string(symbolTable[symbol] - moduleBaseAddress) + " (max="
                         + to_string(moduleBound) + ") assume zero relative";
-                symbolTable[symbol] = moduleBaseAddress; // TODO: check
                 cout<<warning<<endl;
+                symbolTable[symbol] = moduleBaseAddress; // Use the base address of the module (Rule 5)
             }
         }
     }
@@ -257,10 +256,9 @@ public:
     void printSymbolTable() {
         cout<<"Symbol Table"<<endl;
         for(auto symbol : symbolDefinitionOrderList ) {
-            // Print k, v
             cout<<symbol<<"="<<symbolTable[symbol];
             if(symbolErrors.find(symbol) != symbolErrors.end()) {
-                cout<<" "<<symbolErrors[symbol];
+                cout<<" "<<symbolErrors[symbol]; // Print errors related to the symbol
             }
             cout<<endl;
         }
@@ -280,25 +278,34 @@ public:
         }
     }
 
+    // Pass 1
     void runPass1() {
         while(readModule(true));
     }
 
+    // Pass 2
     void runPass2() {
+        // Move tokenizer to beginning of file
         tokenizer.seekToBeginning();
         clearState();
 
+        // Check if symbol addresses are within module bounds (Rule 5)
         checkIfDefinitionInModuleBounds();
+
+        // Print symbol table
         printSymbolTable();
-
         cout<<endl;
-        cout<<"Memory Map"<<endl;
 
+        // Print Memory Map
+        cout<<"Memory Map"<<endl;
         while(readModule(false)) {
             printMemoryMap();
+            // Check if all modules defined in use list are actually used in module (Rule 7)
             checkIfAllUseListModulesUsed();
         }
         cout<<endl;
+
+        // Check if all defined symbols are used in some module (Rule 4)
         checkIfAllDefinedModulesUsed();
         cout<<endl;
     }

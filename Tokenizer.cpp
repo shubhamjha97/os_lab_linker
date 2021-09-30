@@ -7,14 +7,18 @@
 using namespace std;
 
 class Tokenizer {
-    string currentLine;
-    string tokenBuffer;
+
+    ifstream &inFile;
+
     int currentLineNumber;
     int currentTokenIdx;
     int currentLineOffset;
-    vector<pair<string, int> > tokens;
+
+    string currentLine;
+    string tokenBuffer;
     const char* delimiters = " \t\n";
-    ifstream &inFile;
+
+    vector<pair<string, int> > tokens;
 
 public:
     Tokenizer(ifstream & in) : inFile(in) {
@@ -24,6 +28,7 @@ public:
     }
 
     void clearState() {
+        // Resets the tokenizer state
         tokenBuffer.clear();
         tokens.clear();
         currentLine.clear();
@@ -34,11 +39,12 @@ public:
     }
 
     void seekToBeginning() {
+        // Seek to beginning of inFile
         inFile.clear();
         inFile.seekg(0);
     }
 
-    void parseErrorAndExit(int errorcode) {
+    void parseErrorAndExit(int errorcode) { // Rule 1
         __parseerror(errorcode);
         exit(EXIT_FAILURE);
     }
