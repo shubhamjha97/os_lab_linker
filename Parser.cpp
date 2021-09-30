@@ -94,6 +94,7 @@ public:
 
         while(useCount--) {
             if(!tokenizer.getNextToken(tokenBuffer) || !tokenizer.isValidSymbol(tokenBuffer)) {
+                tokenizer.parseErrorAndExit(1);
                 return false;
             }
             if(pass1) {
