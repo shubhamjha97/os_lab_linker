@@ -212,9 +212,8 @@ public:
         string warning, symbol;
         int definitionLocation;
 
-        for (auto kv_pair : symbolDefinitionLocation) {
-            symbol = kv_pair.first;
-            definitionLocation = kv_pair.second;
+        for (auto symbol : symbolDefinitionOrderList) {
+            definitionLocation = symbolDefinitionLocation[symbol];
             if(!globalUsedSymbols[symbol]) {
                 warning = "Warning: Module " + to_string(definitionLocation+1)
                         + ": " + symbol + " was defined but never used";
