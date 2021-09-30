@@ -110,7 +110,6 @@ public:
 
     bool readProgramText(bool pass1) {
         int codeCount = 0;
-        cout<<"reading codecount"<<endl;
         if(!tokenizer.readInteger(codeCount)){
             tokenizer.parseErrorAndExit(0);
             return false;
@@ -121,7 +120,6 @@ public:
         }
 
         while(codeCount--) {
-            cout<<"codecount: "<<codeCount<<endl; // TODO: remove
             char opType;
             int instr = 0;
             if(!tokenizer.readOpType(opType) || !tokenizer.readInstr(instr)) {

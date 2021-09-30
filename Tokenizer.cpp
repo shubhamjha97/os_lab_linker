@@ -63,12 +63,19 @@ public:
         while (token != NULL) {
             tokens.push_back(make_pair((string)token, tokenIdx));
             token = strtok (NULL, delimiters);
-            tokenIdx = (token - &line[0]) + 1;
+            if(token) {
+                tokenIdx = (token - &line[0]) + 1;
+            } else {
+                tokenIdx = tokenIdx + tokens[tokens.size()-1].first.size();
+                tokens.push_back(make_pair("", tokenIdx));
+            }
+            // TODO: If line ends, don't return that token but update the line offset
             // TODO: remove
             if(token) {
                 cout<<"Token: "<<token<<" start_idx: "<<tokenIdx<<endl; // TODO: remove
             }
         }
+        return;
     }
 
     bool readLine() {
@@ -85,15 +92,16 @@ public:
     }
 
     bool getNextToken(string &tokenBuffer){
-        tokenBuffer.clear();
-        if(currentTokenIdx == tokens.size()) {
+        if(currentTokenIdx == (tokens.size() - 1) || currentTokenIdx == tokens.size()) {
             if(!readLine()) {
+                currentLineOffset = tokens[currentTokenIdx].second; // TODO: check
                 return false;
             }
         }
+        tokenBuffer.clear();
         tokenBuffer.append(tokens[currentTokenIdx].first);
         currentLineOffset = tokens[currentTokenIdx].second;
-//        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
+
         currentTokenIdx++;
         return true;
     }
