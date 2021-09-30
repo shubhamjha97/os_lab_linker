@@ -120,7 +120,7 @@ public:
             char opType;
             int instr = 0;
             if(!tokenizer.readOpType(opType) || !tokenizer.readInstr(instr)) {
-                tokenizer.parseErrorAndExit(0); // TODO: check
+                tokenizer.parseErrorAndExit(0);
                 return false;
             }
 

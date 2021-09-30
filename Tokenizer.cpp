@@ -150,16 +150,6 @@ public:
         return instr%1000;
     }
 
-    static bool isValidInstr(string token) {
-        // TODO: Add exception handling for all stoi
-        int instr = stoi(token);
-        // TODO: move this check outside. This shouldn't stop reading of the rest of the file.
-//        if(getOpcode(instr)>=10) {
-//            return false;
-//        }
-        return true;
-    }
-
     bool readOpType(char &opBuffer) {
         if(!getNextToken(tokenBuffer) || !isValidOpType(tokenBuffer)) {
             parseErrorAndExit(2);
@@ -170,7 +160,7 @@ public:
     }
 
     bool readInstr(int &instrBuffer) {
-        if(!getNextToken(tokenBuffer) || !isValidInstr(tokenBuffer)) {
+        if(!getNextToken(tokenBuffer) || !isValidInteger(tokenBuffer)) {
             return false;
         }
         instrBuffer = stoi(tokenBuffer);
