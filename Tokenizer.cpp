@@ -12,7 +12,7 @@ class Tokenizer {
     int currentLineNumber;
     int currentTokenIdx;
     int currentLineOffset;
-    vector<string> tokens;
+    vector<pair<string, int> > tokens;
     const char* delimiters = " \t\n";
     ifstream &inFile;
 
@@ -57,12 +57,17 @@ public:
     }
 
     void tokenizeLine(string line) {
-        char* token;
-        token = strtok(&line[0], delimiters);
-        while (token != NULL)
-        {
-            tokens.push_back(string(token));
+        char* token = strtok(&line[0], delimiters);
+        int tokenIdx = (token - &line[0]) + 1;
+
+        while (token != NULL) {
+            tokens.push_back(make_pair((string)token, tokenIdx));
             token = strtok (NULL, delimiters);
+            tokenIdx = (token - &line[0]) + 1;
+            // TODO: remove
+            if(token) {
+                cout<<"Token: "<<token<<" start_idx: "<<tokenIdx<<endl; // TODO: remove
+            }
         }
     }
 
@@ -76,7 +81,6 @@ public:
             currentTokenIdx = 0;
             tokenizeLine(currentLine);
         }
-//        cout<<"Read line: "<<currentLine<<endl;
         return !tokens.empty();
     }
 
@@ -87,7 +91,8 @@ public:
                 return false;
             }
         }
-        tokenBuffer.append(tokens[currentTokenIdx]);
+        tokenBuffer.append(tokens[currentTokenIdx].first);
+        currentLineOffset = tokens[currentTokenIdx].second;
 //        cout<<"Token: "<<tokenBuffer<<endl; // TODO: remove
         currentTokenIdx++;
         return true;
