@@ -120,7 +120,7 @@ public:
 
     bool isValidInteger(string token) {
         for(auto ch : token) {
-            if(!isnumber(ch)) {
+            if(!isdigit(ch)) {
                 return false;
             }
         }
