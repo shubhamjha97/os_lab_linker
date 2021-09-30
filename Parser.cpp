@@ -268,8 +268,8 @@ public:
     void printMemoryMap() {
         int n = memoryMap.size();
         while(memoryMapPtr < n) {
-            cout<<std::setfill('0')<<std::setw(3)<<memoryMapPtr<<": ";
-            cout<<std::setfill('0')<<std::setw(4)<<memoryMap[memoryMapPtr];
+            cout<<setfill('0')<<setw(3)<<memoryMapPtr<<": ";
+            cout<<setfill('0')<<setw(4)<<memoryMap[memoryMapPtr];
             if(!programErrors[memoryMapPtr].empty()) {
                 cout<<" "<<programErrors[memoryMapPtr];
             }
