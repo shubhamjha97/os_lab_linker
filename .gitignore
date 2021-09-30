@@ -5,3 +5,8 @@ linker
 lab1_assign/debug_input
 cmake-build-debug/*
 lab1_assign/*
+CMakeCache.txt
+CMakeFiles/*
+cmake_install.cmake
+tokenizer
+a.out
