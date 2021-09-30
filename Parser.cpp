@@ -13,7 +13,7 @@ class Parser {
     Tokenizer tokenizer;
     vector<string> useList, symbolDefinitionOrderList;
 
-    map<string, bool> usedSymbols;
+    vector<bool> usedSymbols;
     map<string, bool> globalUsedSymbols;
     map<string, int> symbolDefinitionLocation;
     map<int, int> baseAddresses;
@@ -101,7 +101,9 @@ public:
             }
         }
         moduleUseLists.push_back(useList);
-        usedSymbols.clear();
+        if(!pass1) {
+            usedSymbols = vector<bool>(moduleUseLists[currentModuleCount].size(), false);
+        }
         return true;
     }
 
@@ -152,7 +154,7 @@ public:
                             error = "Error: " + symbol + " is not defined; zero used"; // Rule 3
                             addr = 0;
                         }
-                        usedSymbols[symbol] = true; // Mark symbol as used in the current module
+                        usedSymbols[operand] = true; // Mark symbol as used in the current module
                         globalUsedSymbols[symbol] = true; // Mark symbol as used globally
                         break;
                     case 'I': // Immediate
@@ -223,9 +225,11 @@ public:
 
     void checkIfAllUseListModulesUsed() { // Rule 7
         string warning;
-        for (auto symbol : moduleUseLists[currentModuleCount-1]) {
-            if(!usedSymbols[symbol]) {
-                warning = "Warning: Module "+ to_string(currentModuleCount) + ": " + symbol
+        vector<string> currentModuleUseList = moduleUseLists[currentModuleCount-1];
+        int n = currentModuleUseList.size();
+        for (int i=0; i<n; i++) {
+            if(!usedSymbols[i]) {
+                warning = "Warning: Module "+ to_string(currentModuleCount) + ": " + currentModuleUseList[i]
                         + " appeared in the uselist but was not actually used";
                 cout<<warning<<endl;
             }
