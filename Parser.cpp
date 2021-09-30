@@ -1,5 +1,4 @@
 #include <map>
-#include <set>
 #include <iomanip>
 #include "Tokenizer.cpp"
 
@@ -27,11 +26,10 @@ class Parser {
     vector<int> memoryMap;
     vector<string> programErrors;
     map<string, string> symbolErrors;
-    vector<string> warnings;
     vector<int> moduleSizes;
 
 public:
-    Parser(ifstream & inFile) : tokenizer(inFile) {
+    explicit Parser(ifstream & inFile) : tokenizer(inFile) {
         moduleBaseAddress = 0;
         globalAddress = 0;
         currentModuleCount = 0;
@@ -88,7 +86,7 @@ public:
         if(!tokenizer.readInteger(useCount)) {
             tokenizer.parseErrorAndExit(0);
             return false;
-        };
+        }
 
         if(useCount > USECOUNT_LIMIT) {
             tokenizer.parseErrorAndExit(5);
@@ -126,8 +124,8 @@ public:
                 return false;
             }
 
-            int operand = tokenizer.getOperand(instr);
-            int opcode = tokenizer.getOpcode(instr);
+            int operand = Tokenizer::getOperand(instr);
+            int opcode = Tokenizer::getOpcode(instr);
 
             if(!pass1) {
                 int addr = operand;
