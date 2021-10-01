@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    string filename = "lab1_assign/"+(string) argv[1]; // Take filename from first arg
+    string filename = "./"+(string) argv[1]; // Take filename from first arg
     ifstream inFile(filename);
 
     Parser parser = Parser(inFile);
