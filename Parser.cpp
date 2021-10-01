@@ -210,7 +210,7 @@ public:
         return true;
     }
 
-    void checkIfAllDefinedModulesUsed() { // Rule 4
+    void checkIfAllDefinedSymbolsUsed() { // Rule 4
         string warning, symbol;
         int definitionLocation, n = symbolDefinitionOrderList.size();
         set<string> alreadyPrintedSymbols;
@@ -229,7 +229,7 @@ public:
         }
     }
 
-    void checkIfAllUseListModulesUsed() { // Rule 7
+    void checkIfAllUseListSymbolsUsed() { // Rule 7
         string warning;
         vector<string> currentModuleUseList = moduleUseLists[currentModuleCount-1];
         int n = currentModuleUseList.size();
@@ -315,12 +315,12 @@ public:
         while(readModule(false)) {
             printMemoryMap();
             // Check if all modules defined in use list are actually used in module (Rule 7)
-            checkIfAllUseListModulesUsed();
+            checkIfAllUseListSymbolsUsed();
         }
         cout<<endl;
 
         // Check if all defined symbols are used in some module (Rule 4)
-        checkIfAllDefinedModulesUsed();
+        checkIfAllDefinedSymbolsUsed();
         cout<<endl;
     }
 };
