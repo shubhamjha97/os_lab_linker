@@ -6,8 +6,8 @@ To compile, run:
 make
 ```
 
-To run the linker, run:
+To run the linker, from the run:
 ```
 ./linker <input-file-name>
 ```
-- The program assumes that the input file is present in the directory `./lab1_assign`
+- The program assumes that the input file is present in the directory from which it is run.
